@@ -23,12 +23,10 @@ DHT dht(DHT_DATA_PIN, DHT_TYPE);
  * Prototypes
  */
 void post(String StringDados);
-void connect(void);
-float humidity(void);
-float temperature(void);
+void connectWifi(void);
 
-/*
- * Implementações
+/**
+ * Envia post pro ThingSpeak
  */
 void post(String StringDados)
 {
@@ -46,18 +44,17 @@ void post(String StringDados)
         client.print(StringDados);
   
         lastConnectionTime = millis();
+        
         Serial.println("- Informações enviadas ao ThingSpeak!");
-     }   
+     }
+
+     client.stop();
 }
 
-void connect(void)
+void connectWifi(void)
 {
-    client.stop();
-
     Serial.println("");
-    Serial.println("- Conectando-se à rede WiFi...");
-    
-    delay(1000);
+    Serial.print("- Conectando-se à rede WiFi...");
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(SSID_REDE, SENHA_REDE);
@@ -65,17 +62,9 @@ void connect(void)
     while (WiFi.status() != WL_CONNECTED) 
     {
         delay(500);
+     
         Serial.print(".");
     }
-
-    // Porta padrao do ESP8266 para OTA eh 8266 - Voce pode mudar ser quiser, mas deixe indicado!
-    // ArduinoOTA.setPort(8266);
-   
-    // O Hostname padrao eh esp8266-[ChipID], mas voce pode mudar com essa funcao
-    // ArduinoOTA.setHostname("nome_do_meu_esp8266");
-   
-    // Nenhuma senha eh pedida, mas voce pode dar mais seguranca pedindo uma senha pra gravar
-    // ArduinoOTA.setPassword((const char *)"123");
    
     ArduinoOTA.onStart([]() {
       Serial.println("- Inicio...");
@@ -110,22 +99,13 @@ void connect(void)
     delay(1000);
 }
 
-float humidity(void)
-{
-  return dht.readHumidity();
-}
-
-float temperature(void) {
-  return dht.readTemperature();
-}
-
 void setup()
 {  
     Serial.begin(9600);
     
     lastConnectionTime = 0; 
     
-    connect();
+    connectWifi();
 
     dht.begin();
     
@@ -134,37 +114,43 @@ void setup()
 
 void loop()
 {
-    int Umidade;
-    int Temperatura;
+    float Umidade;
+    float Temperatura;
+    int UmidadeTruncada;
+    int TemperaturaTruncada;
     char Fields[40];
 
     ArduinoOTA.handle();
+
+    Umidade = dht.readHumidity();
+    UmidadeTruncada = (int)Umidade;
     
-    //Força desconexão ao ThingSpeak (se ainda estiver desconectado)
-    if (client.connected())
-    {
-        client.stop();
-        
-        Serial.println("- Desconectado do ThingSpeak");
-        Serial.println();
+    Temperatura = dht.readTemperature();
+    TemperaturaTruncada = (int)Temperatura;
+
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(Umidade) || isnan(Temperatura)) {
+      Serial.println("- Erro: falha ao ler o sensor DHT");
+
+      delay(5000);
+      
+      return;
     }
-
-    Umidade = (int)humidity();
-    Temperatura = (int)temperature();
-
-    Serial.printf("- Temperatura: %d", Temperatura);
-    Serial.println();
-    Serial.printf("- Umidade do ar: %d", Umidade);
-    Serial.println();
+    
+    Serial.print("- Temperatura: ");
+    Serial.print(Temperatura);
+    Serial.print("ºC - Umidade: ");
+    Serial.print(Umidade);
+    Serial.println("%");
     
     //verifica se está conectado no WiFi e se é o momento de enviar dados ao ThingSpeak
     if (!client.connected() && (millis() - lastConnectionTime > INTERVALO_ENVIO_THINGSPEAK))
     {
-        sprintf(Fields,"field1=%d&field2=%d", Umidade, Temperatura);
+        sprintf(Fields,"field1=%d&field2=%d", UmidadeTruncada, TemperaturaTruncada);
       
         post(Fields);
     }
 
-     delay(1000);
+    delay(5000);
 }
 
