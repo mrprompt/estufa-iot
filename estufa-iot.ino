@@ -6,7 +6,7 @@
 #include <DHT.h>
 
 //defines
-#define SSID_REDE                   "imi"  // nome da rede wifi
+#define SSID_REDE                   ""  // nome da rede wifi
 #define SENHA_REDE                  ""  // senha da rede wifi
 #define INTERVALO_ENVIO_THINGSPEAK  30000  // intervalo entre envios de dados ao ThingSpeak (em ms)
 #define DHT_DATA_PIN                D8    // ligação ao pino de dados do sensor
