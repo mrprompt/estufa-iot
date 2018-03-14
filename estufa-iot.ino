@@ -6,7 +6,7 @@
 #include <DHT.h>
 
 //defines
-#define SSID_REDE                   ""  // nome da rede wifi
+#define SSID_REDE                   "imi"  // nome da rede wifi
 #define SENHA_REDE                  ""  // senha da rede wifi
 #define INTERVALO_ENVIO_THINGSPEAK  30000  // intervalo entre envios de dados ao ThingSpeak (em ms)
 #define DHT_DATA_PIN                D8    // ligação ao pino de dados do sensor
@@ -21,18 +21,8 @@ int TemperaturaTruncada;
 
 WiFiClient client;
 ESP8266WebServer server(80);
-
 DHT dht(DHT_DATA_PIN, DHT_TYPE);
 
-/*
-   Prototypes
-*/
-void post(String StringDados);
-void connectWifi(void);
-
-/**
-   Envia post pro ThingSpeak
-*/
 void post(String StringDados)
 {
   if (client.connect(EnderecoAPIThingSpeak, 80))
@@ -103,7 +93,6 @@ void connectWifi(void)
 
   delay(1000);
 }
-
 
 void handleRoot() {
   char html[2000];
@@ -186,7 +175,8 @@ void loop()
   Serial.println("- HTTP server started");
 
   // Check if any reads failed and exit early (to try again).
-  if (isnan(Umidade) || isnan(Temperatura)) {
+  if (isnan(Umidade) || isnan(Temperatura)) 
+  {
     Serial.println("- Erro: falha ao ler o sensor DHT");
 
     delay(500);
