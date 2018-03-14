@@ -179,7 +179,7 @@ void loop()
   {
     Serial.println("- Erro: falha ao ler o sensor DHT");
 
-    delay(500);
+    delay(3000);
 
     return;
   }
