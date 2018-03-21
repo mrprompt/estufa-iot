@@ -19,8 +19,8 @@
 #define DHT_DATA_PIN_1              D1    // ligação ao pino de dados do sensor
 #define DHT_DATA_PIN_2              D2    // ligação ao pino de dados do sensor
 #define RELE_PIN                    D3
-#define FAN_PIN_1                   D7
-#define FAN_PIN_2                   D8
+#define FAN_PIN                     D8
+#define MAX_TEMP                    25
 
 // variáveis globais
 char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
@@ -28,6 +28,7 @@ String ChaveEscritaThingSpeak = "G67X1P1QQHT4D7P8"; //chave de escrita do canal
 long ultimaConexao;
 long ultimaLeitura;
 bool luzAcesa;
+bool ventilacaoLigada;
 int UmidadeInternaTruncada;
 int TemperaturaInternaTruncada;
 int UmidadeExternaTruncada;
@@ -55,7 +56,7 @@ void connectWifi(void)
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    delay(1000);
 
     Serial.print(".");
   }
@@ -157,9 +158,12 @@ void enviaDados()
       TemperaturaInternaTruncada,
       UmidadeExternaTruncada, 
       TemperaturaExternaTruncada,
-      0,
-      0
+      (int)luzAcesa,
+      (int)ventilacaoLigada
     );
+
+    Serial.print("- Enviando dados: ");
+    Serial.println(Fields);
 
     post(Fields);
   }
@@ -223,15 +227,19 @@ void controlaLampada()
 
 void controlaVendiladores()
 {
-  if (TemperaturaInternaTruncada > 25) {
-    digitalWrite(FAN_PIN_1, HIGH);
-    digitalWrite(FAN_PIN_2, HIGH);
-  } else {
-    digitalWrite(FAN_PIN_1, LOW);
-    digitalWrite(FAN_PIN_2, LOW);
-  }
+  Serial.println("- Controlando ventiladores");
+  
+  if (TemperaturaInternaTruncada >= 25) {
+    digitalWrite(FAN_PIN, HIGH);
+    delay(200);
 
-  delay(200);
+    ventilacaoLigada = true;
+  } else {
+    digitalWrite(FAN_PIN, LOW);
+    delay(200);
+
+    ventilacaoLigada = false;
+  }
 }
 
 void setup()
@@ -242,9 +250,12 @@ void setup()
 
   ultimaConexao = 0;
   ultimaLeitura = 0;
+  luzAcesa = false;
+  ventilacaoLigada = false;
   UmidadeInternaTruncada = 0;
   TemperaturaInternaTruncada = 0;
-  luzAcesa = false;
+  TemperaturaExternaTruncada = 0;
+  UmidadeExternaTruncada = 0;
 
   connectWifi();
 
@@ -254,10 +265,10 @@ void setup()
   timeClient.begin();
 
   pinMode(RELE_PIN, OUTPUT);
-  pinMode(FAN_PIN_1, OUTPUT);
-  pinMode(FAN_PIN_2, OUTPUT);
+  pinMode(FAN_PIN, OUTPUT);
   
   digitalWrite(RELE_PIN, LOW);
+  
   delay(200);
 }
 
