@@ -1,54 +1,51 @@
+/**
+ * Estufa IoT com ESP8266 NodeMCU
+ * 
+ * @author Thiago Paes <mrprompt@gmail.com>
+ */
+#include <NTPClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
-#include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <DHT.h>
 
-//defines
-#define SSID_REDE                   ""  // nome da rede wifi
-#define SENHA_REDE                  ""  // senha da rede wifi
+// constantes
+#define SSID_REDE                   "mimimi"  // nome da rede wifi
+#define SENHA_REDE                  "phplandia"  // senha da rede wifi
 #define INTERVALO_ENVIO_THINGSPEAK  30000  // intervalo entre envios de dados ao ThingSpeak (em ms)
-#define DHT_DATA_PIN                D8    // ligação ao pino de dados do sensor
+#define INTERVALO_LEITURA_SENSORES  120000  // intervalo entre leitura do sensor (em ms)
 #define DHT_TYPE                    DHT11 // tipo de sensor DHT utilizado
+#define DHT_DATA_PIN_2              D7    // ligação ao pino de dados do sensor
+#define DHT_DATA_PIN_1              D8    // ligação ao pino de dados do sensor
+#define RELE_PIN                    D1
 
-//constantes e variáveis globais
-char EnderecoAPIThingSpeak[] = "api.thingspeak.com"; // endereço do thingspeak
-String ChaveEscritaThingSpeak = ""; //chave de escrita do canal
-long lastConnectionTime;
-int UmidadeTruncada;
-int TemperaturaTruncada;
+// variáveis globais
+char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
+String ChaveEscritaThingSpeak = "G67X1P1QQHT4D7P8"; //chave de escrita do canal
+long ultimaConexao;
+long ultimaLeitura;
+bool luzAcesa;
+int UmidadeInternaTruncada;
+int TemperaturaInternaTruncada;
+int UmidadeExternaTruncada;
+int TemperaturaExternaTruncada;
+int16_t utc = -3; // UTC -3:00 Brazil
+uint32_t currentMillis = 0;
+uint32_t previousMillis = 0;
+String horaAtual;
 
+// iniciando módulos
 WiFiClient client;
-ESP8266WebServer server(80);
-DHT dht(DHT_DATA_PIN, DHT_TYPE);
+WiFiUDP ntpUDP;
 
-void post(String StringDados)
-{
-  if (client.connect(EnderecoAPIThingSpeak, 80))
-  {
-    //faz a requisição HTTP ao ThingSpeak
-    client.print("POST /update HTTP/1.1\n");
-    client.print("Host: api.thingspeak.com\n");
-    client.print("Connection: close\n");
-    client.print("X-THINGSPEAKAPIKEY: " + ChaveEscritaThingSpeak + "\n");
-    client.print("Content-Type: application/x-www-form-urlencoded\n");
-    client.print("Content-Length: ");
-    client.print(StringDados.length());
-    client.print("\n\n");
-    client.print(StringDados);
+DHT sensor_1(DHT_DATA_PIN_1, DHT_TYPE);
+DHT sensor_2(DHT_DATA_PIN_2, DHT_TYPE);
 
-    lastConnectionTime = millis();
-
-    Serial.println("- Informações enviadas ao ThingSpeak!");
-  }
-
-  client.stop();
-}
+NTPClient timeClient(ntpUDP, "a.st1.ntp.br", utc*3600, 60000);
 
 void connectWifi(void)
 {
-  Serial.println("");
   Serial.print("- Conectando-se à rede WiFi...");
 
   WiFi.mode(WIFI_STA);
@@ -94,112 +91,169 @@ void connectWifi(void)
   delay(1000);
 }
 
-void handleRoot() {
-  char html[2000];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
-
-  // Build an HTML page to display on the web-server root address
-  snprintf ( html, 2000,
-    "<!DOCTYPE html>\
-    <html>\
-    <head>\
-      <meta charset='UTF-8' />\
-      <meta http-equiv='refresh' content='10'/>\
-      <title>Estufa 01</title>\
-      <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' integrity='sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7' crossorigin='anonymous'/>\
-      <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css' integrity='sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r' crossorigin='anonymous'/>\
-    </head>\
-    <body style='padding-top: 1em'>\
-      <div class='container'>\
-        <div class='alert alert-info'>Esta página será recarregada em 10 segundos</div>\
-        <hr class='clearfix'/>\
-        <table class='table table-bordered'>\
-          <thead>\
-            <tr>\
-              <th><span class='glyphicon glyphicon-heart'></span> Uptime </th>\
-              <th><span class='glyphicon glyphicon-tree-conifer'></span> Temperatura </th>\
-              <th><span class='glyphicon glyphicon-tint'></span> Umidade</th>\
-            </tr>\
-          </thead>\
-          <tbody>\
-            <tr>\
-              <td> %02d:%02d:%02d </td>\
-              <td> %d <sup>o</sup>C </td>\
-              <td> %d % </td>\
-            </tr>\
-          </tbody>\
-        </table>\
-      </div>\
-    </body>\
-    </html>",
-    hr, min % 60, sec % 60,
-    TemperaturaTruncada,
-    UmidadeTruncada
-  );
+void leSensores()
+{
+  if (ultimaLeitura > 0 && (millis() - ultimaLeitura < INTERVALO_LEITURA_SENSORES)) {
+    return;
+  }
   
-  server.send(200, "text/html", html);
+  float UmidadeInterna;
+  float TemperaturaInterna;
+  float UmidadeExterna;
+  float TemperaturaExterna;
+
+  Serial.print("- Lendo sensor interno: ");
+  
+  UmidadeInterna = sensor_1.readHumidity();
+  TemperaturaInterna = sensor_1.readTemperature();
+  UmidadeInternaTruncada = (int)UmidadeInterna;
+  TemperaturaInternaTruncada = (int)TemperaturaInterna;
+
+  if (isnan(UmidadeInterna) || isnan(TemperaturaInterna)) {
+    UmidadeInterna = 0;
+    TemperaturaInterna = 0;
+  }
+
+  Serial.print("Temperatura: ");
+  Serial.print(TemperaturaInterna);
+  Serial.print("ºC - Umidade: ");
+  Serial.print(UmidadeInterna);
+  Serial.println("%");
+
+  Serial.print("- Lendo sensor externo: ");
+  
+  UmidadeExterna = sensor_2.readHumidity();
+  TemperaturaExterna = sensor_2.readTemperature();
+  UmidadeExternaTruncada = (int)UmidadeExterna;
+  TemperaturaExternaTruncada = (int)TemperaturaExterna;
+
+  if (isnan(UmidadeExterna) || isnan(TemperaturaExterna)) {
+    UmidadeExterna = 0;
+    TemperaturaExterna = 0;
+  }
+
+  ultimaLeitura = millis();
+
+  Serial.print("Temperatura: ");
+  Serial.print(TemperaturaExterna);
+  Serial.print("ºC - Umidade: ");
+  Serial.print(UmidadeExterna);
+  Serial.println("%");
+}
+
+void enviaDados()
+{
+  char Fields[100];
+  
+  //verifica se está conectado no WiFi e se é o momento de enviar dados ao ThingSpeak
+  if (!client.connected() && (millis() - ultimaConexao > INTERVALO_ENVIO_THINGSPEAK))
+  {
+    sprintf(
+      Fields, 
+      "field1=%d&field2=%d&field3=%d&field4=%d&field5=%d&field6=%d", 
+      UmidadeInternaTruncada, 
+      TemperaturaInternaTruncada,
+      UmidadeExternaTruncada, 
+      TemperaturaExternaTruncada,
+      0,
+      0
+    );
+
+    post(Fields);
+  }
+}
+
+void post(String StringDados)
+{
+  if (client.connect(EnderecoAPIThingSpeak, 80))
+  {
+    //faz a requisição HTTP ao ThingSpeak
+    client.print("POST /update HTTP/1.1\n");
+    client.print("Host: api.thingspeak.com\n");
+    client.print("Connection: close\n");
+    client.print("X-THINGSPEAKAPIKEY: " + ChaveEscritaThingSpeak + "\n");
+    client.print("Content-Type: application/x-www-form-urlencoded\n");
+    client.print("Content-Length: ");
+    client.print(StringDados.length());
+    client.print("\n\n");
+    client.print(StringDados);
+
+    ultimaConexao = millis();
+
+    Serial.println("- Informações enviadas ao ThingSpeak!");
+  }
+
+  client.stop();
+}
+
+void controlaLampada()
+{
+  Serial.println("- Controlando luz");
+  
+  int horaAtual = timeClient.getHours();
+
+  switch (horaAtual) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+    case 23:
+      digitalWrite(RELE_PIN, HIGH);
+
+      luzAcesa = true;
+      break;
+
+    default:
+      digitalWrite(RELE_PIN, LOW);
+
+      luzAcesa = false;
+  }
+
+  delay(200);
 }
 
 void setup()
 {
   Serial.begin(9600);
+  Serial.println();
+  Serial.println("- Estufa IoT com ESP8266 NodeMCU");
 
-  lastConnectionTime = 0;
-  UmidadeTruncada = 0;
-  TemperaturaTruncada = 0;
+  ultimaConexao = 0;
+  ultimaLeitura = 0;
+  UmidadeInternaTruncada = 0;
+  TemperaturaInternaTruncada = 0;
+  luzAcesa = false;
 
   connectWifi();
 
-  dht.begin();
+  sensor_1.begin();
+  sensor_2.begin();
 
-  Serial.println("- Estufa IoT com ESP8266 NodeMCU");
+  timeClient.begin();
+
+  pinMode(RELE_PIN, OUTPUT);
+  digitalWrite(RELE_PIN, LOW);
+  delay(200);
 }
 
 void loop()
 {
   ArduinoOTA.handle();
-  server.handleClient();
 
-  char Fields[40];
-  float Umidade;
-  float Temperatura;
+  timeClient.update();
 
-  Umidade = dht.readHumidity();
-  Temperatura = dht.readTemperature();
+  leSensores();
 
-  server.on("/", handleRoot);
-  server.begin();
-  
-  Serial.println("- HTTP server started");
+  controlaLampada();
 
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(Umidade) || isnan(Temperatura)) 
-  {
-    Serial.println("- Erro: falha ao ler o sensor DHT");
-
-    delay(3000);
-
-    return;
-  }
-
-  Serial.print("- Temperatura: ");
-  Serial.print(Temperatura);
-  Serial.print("ºC - Umidade: ");
-  Serial.print(Umidade);
-  Serial.println("%");
-
-  UmidadeTruncada = (int)Umidade;
-  TemperaturaTruncada = (int)Temperatura;
-
-  //verifica se está conectado no WiFi e se é o momento de enviar dados ao ThingSpeak
-  if (!client.connected() && (millis() - lastConnectionTime > INTERVALO_ENVIO_THINGSPEAK))
-  {
-    sprintf(Fields, "field1=%d&field2=%d", UmidadeTruncada, TemperaturaTruncada);
-
-    post(Fields);
-  }
+  enviaDados();
 
   delay(5000);
 }
