@@ -16,9 +16,11 @@
 #define INTERVALO_ENVIO_THINGSPEAK  30000  // intervalo entre envios de dados ao ThingSpeak (em ms)
 #define INTERVALO_LEITURA_SENSORES  120000  // intervalo entre leitura do sensor (em ms)
 #define DHT_TYPE                    DHT11 // tipo de sensor DHT utilizado
-#define DHT_DATA_PIN_2              D7    // ligação ao pino de dados do sensor
-#define DHT_DATA_PIN_1              D8    // ligação ao pino de dados do sensor
-#define RELE_PIN                    D1
+#define DHT_DATA_PIN_1              D1    // ligação ao pino de dados do sensor
+#define DHT_DATA_PIN_2              D2    // ligação ao pino de dados do sensor
+#define RELE_PIN                    D3
+#define FAN_PIN_1                   D7
+#define FAN_PIN_2                   D8
 
 // variáveis globais
 char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
@@ -219,6 +221,19 @@ void controlaLampada()
   delay(200);
 }
 
+void controlaVendiladores()
+{
+  if (TemperaturaInternaTruncada > 25) {
+    digitalWrite(FAN_PIN_1, HIGH);
+    digitalWrite(FAN_PIN_2, HIGH);
+  } else {
+    digitalWrite(FAN_PIN_1, LOW);
+    digitalWrite(FAN_PIN_2, LOW);
+  }
+
+  delay(200);
+}
+
 void setup()
 {
   Serial.begin(9600);
@@ -239,6 +254,9 @@ void setup()
   timeClient.begin();
 
   pinMode(RELE_PIN, OUTPUT);
+  pinMode(FAN_PIN_1, OUTPUT);
+  pinMode(FAN_PIN_2, OUTPUT);
+  
   digitalWrite(RELE_PIN, LOW);
   delay(200);
 }
@@ -250,6 +268,8 @@ void loop()
   timeClient.update();
 
   leSensores();
+
+  controlaVendiladores();
 
   controlaLampada();
 
