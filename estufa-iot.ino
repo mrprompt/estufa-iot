@@ -11,8 +11,8 @@
 #include <DHT.h>
 
 // constantes
-#define SSID_REDE                   "mimimi"      // nome da rede wifi
-#define SENHA_REDE                  "phplandia"  // senha da rede wifi
+#define SSID_REDE                   ""      // nome da rede wifi
+#define SENHA_REDE                  ""  // senha da rede wifi
 #define INTERVALO_ENVIO_THINGSPEAK  30000   // intervalo entre envios de dados ao ThingSpeak (em ms)
 #define INTERVALO_LEITURA_SENSORES  120000  // intervalo entre leitura do sensor (em ms)
 #define DHT_TYPE                    DHT11   // tipo de sensor DHT utilizado
@@ -24,7 +24,7 @@
 
 // variáveis globais
 char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
-String ChaveEscritaThingSpeak = "G67X1P1QQHT4D7P8"; //chave de escrita do canal
+String ChaveEscritaThingSpeak = ""; //chave de escrita do canal
 String horaAtual;
 long ultimaConexao = 0;
 long ultimaLeitura = 0;
