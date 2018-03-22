@@ -25,6 +25,7 @@
 // variáveis globais
 char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
 String ChaveEscritaThingSpeak = "G67X1P1QQHT4D7P8"; //chave de escrita do canal
+String horaAtual;
 long ultimaConexao;
 long ultimaLeitura;
 bool luzAcesa;
@@ -36,7 +37,6 @@ int TemperaturaExternaTruncada;
 int16_t utc = -3; // UTC -3:00 Brazil
 uint32_t currentMillis = 0;
 uint32_t previousMillis = 0;
-String horaAtual;
 
 // iniciando módulos
 WiFiClient client;
@@ -211,13 +211,13 @@ void controlaLampada()
     case 21:
     case 22:
     case 23:
-      digitalWrite(RELE_PIN, HIGH);
+      digitalWrite(RELE_PIN, LOW);
 
       luzAcesa = true;
       break;
 
     default:
-      digitalWrite(RELE_PIN, LOW);
+      digitalWrite(RELE_PIN, HIGH);
 
       luzAcesa = false;
   }
@@ -257,19 +257,19 @@ void setup()
   TemperaturaExternaTruncada = 0;
   UmidadeExternaTruncada = 0;
 
+  pinMode(RELE_PIN, OUTPUT);
+  pinMode(FAN_PIN, OUTPUT);
+    
+  digitalWrite(RELE_PIN, HIGH);
+  
+  delay(200);
+
   connectWifi();
 
   sensor_1.begin();
   sensor_2.begin();
 
   timeClient.begin();
-
-  pinMode(RELE_PIN, OUTPUT);
-  pinMode(FAN_PIN, OUTPUT);
-  
-  digitalWrite(RELE_PIN, LOW);
-  
-  delay(200);
 }
 
 void loop()
