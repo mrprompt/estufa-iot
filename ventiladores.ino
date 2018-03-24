@@ -1,17 +1,25 @@
 void controlaVentiladores()
 {
   Serial.println("- Controlando ventiladores");
-  
-  if (TemperaturaInternaTruncada >= 25) {
-    digitalWrite(FAN_PIN, HIGH);
-    delay(200);
 
-    ventilacaoLigada = true;
+  if (TemperaturaInternaTruncada >= MAX_TEMP) {
+    ligaVentiladores();
   } else {
-    digitalWrite(FAN_PIN, LOW);
-    delay(200);
-
-    ventilacaoLigada = false;
+    desligaVentiladores();
   }
+}
+
+void ligaVentiladores()
+{
+  digitalWrite(FAN_PIN, HIGH);
+
+  ventilacaoLigada = true;
+}
+
+void desligaVentiladores()
+{
+  digitalWrite(FAN_PIN, LOW);
+
+  ventilacaoLigada = false;
 }
 

@@ -11,32 +11,35 @@
 #include <DHT.h>
 
 // constantes
-#define SSID_REDE                   ""      // nome da rede wifi
-#define SENHA_REDE                  ""  // senha da rede wifi
-#define INTERVALO_ENVIO_THINGSPEAK  30000   // intervalo entre envios de dados ao ThingSpeak (em ms)
-#define INTERVALO_LEITURA_SENSORES  120000  // intervalo entre leitura do sensor (em ms)
-#define DHT_TYPE                    DHT11   // tipo de sensor DHT utilizado
-#define DHT_DATA_PIN_1              D1      // ligação ao pino de dados do sensor
-#define DHT_DATA_PIN_2              D2      // ligação ao pino de dados do sensor
-#define RELE_PIN                    D3      // ligação ao pino de controle do relé
-#define FAN_PIN                     D8      // ligação ao pino de controle do ventiladores
-#define MAX_TEMP                    25      // temperatura máxima, para ligar os ventiladores
+#define SSID_REDE                     ""      // nome da rede wifi
+#define SENHA_REDE                    ""  // senha da rede wifi
+#define INTERVALO_ENVIO_THINGSPEAK    60000       // intervalo entre envios de dados ao ThingSpeak (em ms)
+#define INTERVALO_LEITURA_SENSORES    1000        // intervalo entre leitura do sensor (em ms)
+#define INTERVALO_LEITURA_THINGSPEAK  15000       // intervalo entre leitura de dados do ThingSpeak (em ms)
+#define FUSO                          -3          // UTC -3:00 Brazil
+#define NTP_ADDRESS                   "a.st1.ntp.br" // NTP Server
+#define DHT_TYPE                      DHT11         // tipo de sensor DHT utilizado
+#define DHT_DATA_PIN_1                D1      // ligação ao pino de dados do sensor
+#define DHT_DATA_PIN_2                D2      // ligação ao pino de dados do sensor
+#define RELE_PIN                      D3      // ligação ao pino de controle do relé
+#define FAN_PIN                       D8      // ligação ao pino de controle do ventiladores
+#define MAX_TEMP                      25      // temperatura máxima, para ligar os ventiladores
 
 // variáveis globais
 char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
 String ChaveEscritaThingSpeak = ""; //chave de escrita do canal
-String horaAtual;
+String talkBackAPIKey = "";
+String talkBackID = "";
 long ultimaConexao = 0;
+long ultimaConexaoLeitura = 0;
 long ultimaLeitura = 0;
 bool luzAcesa = false;
 bool ventilacaoLigada = false;
+int horaAtual = 0;
 int UmidadeInternaTruncada = 0;
 int TemperaturaInternaTruncada = 0;
 int UmidadeExternaTruncada = 0;
 int TemperaturaExternaTruncada = 0;
-int16_t utc = -3; // UTC -3:00 Brazil
-uint32_t currentMillis = 0;
-uint32_t previousMillis = 0;
 
 // iniciando módulos
 WiFiClient client;
@@ -45,7 +48,7 @@ WiFiUDP ntpUDP;
 DHT sensor_1(DHT_DATA_PIN_1, DHT_TYPE);
 DHT sensor_2(DHT_DATA_PIN_2, DHT_TYPE);
 
-NTPClient timeClient(ntpUDP, "a.st1.ntp.br", utc*3600, 60000);
+NTPClient timeClient(ntpUDP, NTP_ADDRESS, FUSO * 3600, 60000);
 
 void setup()
 {
@@ -57,31 +60,25 @@ void setup()
   pinMode(FAN_PIN, OUTPUT);
     
   digitalWrite(RELE_PIN, HIGH);
-  
-  delay(200);
-
-  connectWifi();
 
   sensor_1.begin();
   sensor_2.begin();
 
+  connectWifi();
   timeClient.begin();
 }
 
 void loop()
-{
+{  
   ArduinoOTA.handle();
-
   timeClient.update();
 
   leSensores();
-
   controlaVentiladores();
-
   controlaLampada();
-
   enviaDados();
+  // recebeDados();
 
-  delay(5000);
+//  delay(5000);
 }
 

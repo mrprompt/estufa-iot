@@ -1,5 +1,10 @@
 void connectWifi(void)
 {
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    return;
+  }
+  
   Serial.print("- Conectando-se à rede WiFi...");
 
   WiFi.mode(WIFI_STA);
@@ -7,7 +12,7 @@ void connectWifi(void)
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(1000);
+    delay(500);
 
     Serial.print(".");
   }
@@ -41,7 +46,5 @@ void connectWifi(void)
   Serial.print("- IP obtido: ");
   Serial.print(WiFi.localIP());
   Serial.println();
-
-  delay(1000);
 }
 

@@ -17,16 +17,25 @@ void controlaLampada()
     case 21:
     case 22:
     case 23:
-      digitalWrite(RELE_PIN, LOW);
-
-      luzAcesa = true;
+      ligaLuz();
       break;
 
     default:
-      digitalWrite(RELE_PIN, HIGH);
-
-      luzAcesa = false;
+      desligaLuz();
   }
-
-  delay(200);
 }
+
+void ligaLuz()
+{
+  digitalWrite(RELE_PIN, LOW);
+
+  luzAcesa = true;  
+}
+
+void desligaLuz()
+{
+  digitalWrite(RELE_PIN, HIGH);
+
+  luzAcesa = false;
+}
+

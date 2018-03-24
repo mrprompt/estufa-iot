@@ -4,17 +4,21 @@ void leSensores()
     return;
   }
   
+  sensorInterno();
+  sensorExterno();
+}
+
+void sensorInterno()
+{  
   float UmidadeInterna;
   float TemperaturaInterna;
-  float UmidadeExterna;
-  float TemperaturaExterna;
-
+ 
   Serial.print("- Lendo sensor interno: ");
   
   UmidadeInterna = sensor_1.readHumidity();
   TemperaturaInterna = sensor_1.readTemperature();
-  UmidadeInternaTruncada = (int)UmidadeInterna;
-  TemperaturaInternaTruncada = (int)TemperaturaInterna;
+  UmidadeInternaTruncada = (int)UmidadeInterna - 13;
+  TemperaturaInternaTruncada = (int)TemperaturaInterna - 6;
 
   if (isnan(UmidadeInterna) || isnan(TemperaturaInterna)) {
     UmidadeInterna = 0;
@@ -22,17 +26,23 @@ void leSensores()
   }
 
   Serial.print("Temperatura: ");
-  Serial.print(TemperaturaInterna);
+  Serial.print(TemperaturaInterna - 6);
   Serial.print("ºC - Umidade: ");
-  Serial.print(UmidadeInterna);
+  Serial.print(UmidadeInterna - 13);
   Serial.println("%");
+}
+
+void sensorExterno()
+{
+  float UmidadeExterna;
+  float TemperaturaExterna;
 
   Serial.print("- Lendo sensor externo: ");
   
   UmidadeExterna = sensor_2.readHumidity();
   TemperaturaExterna = sensor_2.readTemperature();
-  UmidadeExternaTruncada = (int)UmidadeExterna;
-  TemperaturaExternaTruncada = (int)TemperaturaExterna;
+  UmidadeExternaTruncada = (int)UmidadeExterna - 8;
+  TemperaturaExternaTruncada = (int)TemperaturaExterna -5;
 
   if (isnan(UmidadeExterna) || isnan(TemperaturaExterna)) {
     UmidadeExterna = 0;
@@ -42,8 +52,8 @@ void leSensores()
   ultimaLeitura = millis();
 
   Serial.print("Temperatura: ");
-  Serial.print(TemperaturaExterna);
+  Serial.print(TemperaturaExterna - 5);
   Serial.print("ºC - Umidade: ");
-  Serial.print(UmidadeExterna);
+  Serial.print(UmidadeExterna - 8);
   Serial.println("%");
 }
