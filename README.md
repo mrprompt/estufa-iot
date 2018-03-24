@@ -29,9 +29,10 @@ com a seguinte estrutura:
 ```console
 #define SSID_REDE               "" // nome da rede wifi
 #define SENHA_REDE              "" // senha da rede wifi
-#define ChaveEscritaThingSpeak  "" //chave de escrita do canal
-#define talkBackAPIKey          "" // chave do TalkBack
-#define talkBackID              "" // ID do TalkBack
+
+String ChaveEscritaThingSpeak  = ""; //chave de escrita do canal
+String talkBackAPIKey          = ""; // chave do TalkBack
+String talkBackID              = ""; // ID do TalkBack
 ```
 
 ## Montagem

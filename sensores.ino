@@ -20,7 +20,7 @@ void sensorInterno()
   UmidadeInternaTruncada = (int)UmidadeInterna;
   TemperaturaInternaTruncada = (int)TemperaturaInterna;
 
-  if (isnan(UmidadeInterna) || isnan(TemperaturaInterna)) {
+  if (isnan(UmidadeInterna) || isnan(TemperaturaInterna) || TemperaturaInternaTruncada > 100) {
     UmidadeInterna = 0;
     TemperaturaInterna = 0;
   }
@@ -44,7 +44,7 @@ void sensorExterno()
   UmidadeExternaTruncada = (int)UmidadeExterna;
   TemperaturaExternaTruncada = (int)TemperaturaExterna;
 
-  if (isnan(UmidadeExterna) || isnan(TemperaturaExterna)) {
+  if (isnan(UmidadeExterna) || isnan(TemperaturaExterna) || TemperaturaInternaTruncada > 100) {
     UmidadeExterna = 0;
     TemperaturaExterna = 0;
   }
