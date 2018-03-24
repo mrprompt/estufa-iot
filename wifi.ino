@@ -12,7 +12,7 @@ void connectWifi(void)
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    delay(1000);
 
     Serial.print(".");
   }

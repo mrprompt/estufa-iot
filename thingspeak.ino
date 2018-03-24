@@ -30,13 +30,7 @@ void recebeDados()
   {    
     String comando = get();
 
-    if (comando == "LIGAR_VENTILADOR" || comando == "DESLIGAR_VENTILADOR") {
-        comandoVentilacao = comando;
-    }
-
-    if (comando == "LIGAR_LUZ" || comando == "DESLIGAR_LUZ") {
-        comandoLuz = comando;
-    }
+    Serial.println(comando);
   }
 }
 

@@ -12,6 +12,10 @@ void controlaLampada()
     case 4:
     case 5:
     case 6:
+    case 15:
+    case 16:
+    case 17:
+    case 18:
     case 19:
     case 20:
     case 21:

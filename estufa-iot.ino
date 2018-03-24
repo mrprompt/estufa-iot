@@ -3,6 +3,7 @@
  * 
  * @author Thiago Paes <mrprompt@gmail.com>
  */
+#include "_config.h"
 #include <NTPClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -11,8 +12,6 @@
 #include <DHT.h>
 
 // constantes
-#define SSID_REDE                     ""      // nome da rede wifi
-#define SENHA_REDE                    ""  // senha da rede wifi
 #define INTERVALO_ENVIO_THINGSPEAK    60000       // intervalo entre envios de dados ao ThingSpeak (em ms)
 #define INTERVALO_LEITURA_SENSORES    1000        // intervalo entre leitura do sensor (em ms)
 #define INTERVALO_LEITURA_THINGSPEAK  15000       // intervalo entre leitura de dados do ThingSpeak (em ms)
@@ -27,9 +26,6 @@
 
 // variáveis globais
 char EnderecoAPIThingSpeak[]  = "api.thingspeak.com"; // endereço do thingspeak
-String ChaveEscritaThingSpeak = ""; //chave de escrita do canal
-String talkBackAPIKey = "";
-String talkBackID = "";
 long ultimaConexao = 0;
 long ultimaConexaoLeitura = 0;
 long ultimaLeitura = 0;

@@ -21,6 +21,19 @@ A Estufa IoT possui:
 - Placa de prototipagem
 - 1 transistor 2N3904 ou compatível
 
+## Instalação
+
+Antes de compilar o projeto, crie o arquivo *_config.h* dentro do diretório do projeto
+com a seguinte estrutura:
+
+```console
+#define SSID_REDE               "" // nome da rede wifi
+#define SENHA_REDE              "" // senha da rede wifi
+#define ChaveEscritaThingSpeak  "" //chave de escrita do canal
+#define talkBackAPIKey          "" // chave do TalkBack
+#define talkBackID              "" // ID do TalkBack
+```
+
 ## Montagem
 
 - Ligue os pinos de dados dos sensores DHTs nas portas D1 e D2 e os de energia (positivo e negativo) na placa de prototipagem
