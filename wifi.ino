@@ -14,7 +14,7 @@ void connectWifi(void)
   {
     delay(1000);
 
-    Serial.print(".");
+    Serial.print('.');
   }
 
   ArduinoOTA.onStart([]() {
@@ -41,7 +41,6 @@ void connectWifi(void)
 
   ArduinoOTA.begin();
 
-  Serial.println("");
   Serial.println("- WiFi connectado com sucesso!");
   Serial.print("- IP obtido: ");
   Serial.print(WiFi.localIP());

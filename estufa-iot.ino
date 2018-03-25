@@ -31,7 +31,6 @@ long ultimaConexaoLeitura = 0;
 long ultimaLeitura = 0;
 bool luzAcesa = false;
 bool ventilacaoLigada = false;
-int horaAtual = 0;
 int UmidadeInternaTruncada = 0;
 int TemperaturaInternaTruncada = 0;
 int UmidadeExternaTruncada = 0;
@@ -75,6 +74,6 @@ void loop()
   enviaDados();
   // recebeDados();
 
-//  delay(5000);
+  delay(1000);
 }
 
